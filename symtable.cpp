@@ -39,7 +39,7 @@ vector<string> SymTable::getStringVec(string filename)
 
 bool SymTable::createSymTab(vector<string>& vec)
 {
-		// check if vector entered is a Symbol Table vector
+	// check if vector entered is a Symbol Table vector
 	if(vec[0] != "Symbol")
 	{
 		return false;
@@ -70,11 +70,43 @@ bool SymTable::createSymTab(vector<string>& vec)
 	return true;
 }
 
+bool SymTable::createOpTable(vector<string> vec)
+{
+	// check the number of opcodes
+	uint16_t numOfOp = vec.size();
+	if(numOfOp % 2 == 0)
+		numOfOp /= 2;
+	else // there is undefined symbol, or address with no symbol
+	{
+		return false;
+	}
+	
+	// put opcodes into map
+	for(int i = 0; i < numOfOp*2; i = i + 2)
+	{
+		opTab[vec[i+1]] = vec[i];
+	}
+	return true;
+}
+
 void SymTable::printSymTab()
 {
 	map<string, string>::iterator iter;
 	
+	cout<<"Symbols:"<<endl;
 	for(iter = symTab.begin(); iter != symTab.end(); ++iter)
+	{
+		cout<<iter->first<<" ";
+		cout<<iter->second<<endl;
+	}
+}
+
+void SymTable::printOptab()
+{
+	map<string, string>::iterator iter;	
+	
+	cout<<"OpCodes:"<<endl;
+	for(iter = opTab.begin(); iter != opTab.end(); ++iter)
 	{
 		cout<<iter->first<<" ";
 		cout<<iter->second<<endl;

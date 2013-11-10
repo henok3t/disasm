@@ -19,6 +19,5 @@ public:
 		
 private:
 	map<string, string> symTab; 
-	map<string, string> litTab;
 	map<string, string> opTab;
 };

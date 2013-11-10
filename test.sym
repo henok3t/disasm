@@ -1,0 +1,12 @@
+Symbol          Address:
+-----------------------
+FIRST           0000
+LOOP            000B
+COUNT           001E
+TABLE           0021
+TABLE2          1791
+TOTAL           2F01
+
+Literal         Address:
+-----------------------
+=X'3F'          0006

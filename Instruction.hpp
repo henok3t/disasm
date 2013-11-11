@@ -17,10 +17,12 @@ class Instruction
 	~Instruction(){};
 	
 	string GetName();
-	int GetFormat();
-	void SetFormat(int);
-	void SetOperand(string op);
-	int GetLength();
+        string GetOperand();
+        int GetFormat();
+        void SetFormat(int);
+        void SetOperand(string op);
+        int GetLength();
+        void print();
 	
 private:
 	SymTable Stable;

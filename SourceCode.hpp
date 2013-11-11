@@ -1,6 +1,8 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include "symtable.hpp"
+#include "Instruction.hpp"
 
 
 using namespace std;
@@ -22,4 +24,4 @@ private:
 		string progName;
 		string progSize;
 	
-}
+};

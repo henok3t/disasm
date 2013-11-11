@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <fstream>
-#include <math>
 
 using namespace std;
 
@@ -55,7 +54,7 @@ char int_To_hex(int i)
 		}
 }
 
-int[] getBinary(int d)
+int* getBinary(int d)
 {
  		int j= 3;
 		int binary_opcode[4];

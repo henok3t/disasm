@@ -9,21 +9,19 @@ using namespace std;
 class Instruction
 {
 	public:
-	Instructuion(){};
-	Instructuion(string opKey, SymTable Stable){};
-	~Instructuion(){};
+	Instruction(){};
+	Instruction(string opKey, SymTable Stable){};
+	~Instruction(){};
 	
 	string GetName();
 	int GetFormat();
 	void SetFormat(int);
-	void SetOperand(char[] op);
-	void 
+	void SetOperand(char* op);	
 	
-	
-	private:
+private:
 	SymTable Stable;
 	string opKey;
-	char[10] Name;
-	char[3] Format;
-	char[100] Operand;
-}
+	char Name[10];
+	char Format[3];
+	char Operand[100];
+};

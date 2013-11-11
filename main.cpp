@@ -8,7 +8,11 @@ int main(int argc, char** argv)
 	table.printSymTab();	
 	
 	vector<string> vec2 = table.getStringVec("opCodes");
-	table.createOpTable(vec2);
+	
+	if(!table.createOpTable(vec2))
+	{
+		cerr<<"OPCODE ERROR"<<endl;
+	}
 	table.printOptab();
 	
 	return 0;

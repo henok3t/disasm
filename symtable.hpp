@@ -4,6 +4,12 @@
 
 using namespace std;
 
+struct opVals
+{
+	string opcode;
+	int format;
+};
+
 class SymTable
 {
 public:
@@ -19,5 +25,5 @@ public:
 		
 private:
 	map<string, string> symTab; 
-	map<string, string> opTab;
+	map<string, struct opVals> opTab;
 };

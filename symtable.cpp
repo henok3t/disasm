@@ -83,17 +83,20 @@ bool SymTable::createOpTable(vector<string> vec)
 {
 	// check the number of opcodes
 	uint16_t numOfOp = vec.size();
-	if(numOfOp % 2 == 0)
-		numOfOp /= 2;
+	if(numOfOp % 3 == 0)
+		numOfOp /= 3;
 	else // there is undefined symbol, or address with no symbol
 	{
 		return false;
 	}
 	
 	// put opcodes into map
-	for(int i = 0; i < numOfOp*2; i = i + 2)
+	for(int i = 0; i < numOfOp*3; i = i + 3)
 	{
-		opTab[vec[i+1]] = vec[i];
+		struct opVals vals;
+		vals.opcode = vec[i];
+		vals.format = int(vec[i+2][0]) - 48;
+		opTab[vec[i+1]] = vals;
 	}
 	return true;
 }
@@ -112,13 +115,14 @@ void SymTable::printSymTab()
 
 void SymTable::printOptab()
 {
-	map<string, string>::iterator iter;	
+	map<string, struct opVals>::iterator iter;	
 	
 	cout<<"OpCodes:"<<endl;
 	for(iter = opTab.begin(); iter != opTab.end(); ++iter)
 	{
 		cout<<iter->first<<" ";
-		cout<<iter->second<<endl;
+		cout<<iter->second.opcode<<" ";
+		cout<<iter->second.format<<endl;
 	}
 }
 

@@ -65,7 +65,16 @@ bool SymTable::createSymTab(vector<string>& vec)
 	for(i = 0; i < numOfSym*2; i = i + 2)
 	{
 		symTab[vec[i+3]] = vec[i+2];
-	}	
+	}
+	
+	// add literals to symbol table
+	if( vec.size() > (numOfSym*2)+2 )
+	{
+		for(i = (numOfSym*2)+4; i < vec.size(); i = i+2)
+		{
+			symTab[vec[i+1]] = vec[i];
+		}
+	}
 	
 	return true;
 }

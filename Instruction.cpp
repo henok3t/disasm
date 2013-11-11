@@ -5,43 +5,49 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <fstream>
+#include "Instruction.hpp"
 
 using namespace std;
 
 
-Instruciton::Instruction(stirng key, SymTable Stable)
+Instruction::Instruction(string key, SymTable Stable)
 {
-	this.opKey = key;
-	this.Stable = Stable;
+	this->opKey = key;
+	this->Stable = Stable;
 }
 
-string Instruciton::GetName()
+string Instruction::GetName()
 {
 
 }
 	
-string GetFormat()
+int Instruction::GetFormat()
 {
-
 /*..........  not complete............*/
-	if(format == 3)
-	{
-		binary_opcode = getBinary(line.at(i+2));
+	//if(format == 3)
+	//{
+		//binary_opcode = getBinary(line.at(i+2));
 		 					
-		 if(binary_opcode[3] == 1)
-		  	ins.SetFormat(4);
-		 else
-			ins.SetFormat(3);
-	}
+		//if(binary_opcode[3] == 1)
+		//ins.SetFormat(4);
+		//else
+		//ins.SetFormat(3);
+	//}
 		 		
 }
 	
-int GetLenght()
+int Instruction::GetLength()
 {
 	
 }
 	
-void SetOperand(char[] op)
+void Instruction::SetOperand(char* op)
 {
 
 }
+
+void Instruction::SetFormat(int)
+{
+	
+}
+

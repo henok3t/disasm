@@ -14,3 +14,6 @@ SourceCode.o: SourceCode.cpp
 
 Instruction.o: Instruction.cpp
 	$(CC) -c Instruction.cpp
+	
+clean:
+	rm main.o symtable.o SourceCode.o Instruction.o

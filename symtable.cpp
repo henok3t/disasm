@@ -94,7 +94,7 @@ bool SymTable::createOpTable(vector<string> vec)
 	for(int i = 0; i < numOfOp*3; i = i + 3)
 	{
 		struct opVals vals;
-		vals.opcode = vec[i];
+		vals.name = vec[i];
 		vals.format = int(vec[i+2][0]) - 48;
 		opTab[vec[i+1]] = vals;
 	}
@@ -121,12 +121,17 @@ void SymTable::printOptab()
 	for(iter = opTab.begin(); iter != opTab.end(); ++iter)
 	{
 		cout<<iter->first<<" ";
-		cout<<iter->second.opcode<<" ";
+		cout<<iter->second.name<<" ";
 		cout<<iter->second.format<<endl;
 	}
 }
 
 string SymTable::getSymbol(string address)
 {
-	
+	return this->symTab[address];
+}
+
+struct opVals SymTable::getOpVal(string opcode)
+{
+	return this->opTab[opcode];
 }

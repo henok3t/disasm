@@ -6,7 +6,7 @@ using namespace std;
 
 struct opVals
 {
-	string opcode;
+	string name;
 	int format;
 };
 
@@ -22,6 +22,7 @@ public:
 	void printSymTab();
 	void printOptab();
 	string getSymbol(string address);
+	struct opVals getOpVal(string opcode);
 		
 private:
 	map<string, string> symTab; 

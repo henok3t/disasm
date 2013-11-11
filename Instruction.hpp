@@ -19,15 +19,15 @@ class Instruction
 	string GetName();
 	int GetFormat();
 	void SetFormat(int);
-	void SetOperand(char* op);
+	void SetOperand(string op);
 	int GetLength();
 	
 private:
 	SymTable Stable;
 	string opKey;
-	char Name[10];
-	char Format[3];
-	char Operand[100];
+	string name;
+	int format;
+	string operand;
 };
 
 #endif // INSTRUCTION_HPP

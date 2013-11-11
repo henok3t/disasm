@@ -82,18 +82,52 @@ SourceCode::SourceCode(SymTable ST)
         this->tables = ST;
 }
 
+string getReG(char c)
+{
+	switch(c)
+		{
+			case '0':
+				return "A";
+				break;
+			case '1':
+				return "X";
+				break;
+			case '2':
+				return "L";
+				break;
+			case '3':
+				return "B";
+				break;
+			case '4':
+				return "S";
+				break;
+			case '5':
+				return "T";
+				break;
+			case '6':
+				return "F";
+				break;
+			case '8':
+				return "PC";
+				break;
+			case '9':
+				return "SW";
+				break;
+		}
+}
+
 vector<Instruction> SourceCode::getInstructions(string objFile)
 {
         int i, j, d, format, insCount, recordSize; 
-        std::string line, addR1, addR2, R1, R2;
+        std::string line, R1, R2;
         vector<int> binary_opcode;
-        char newByte[2], Operand[100];
+        char newByte[2], Operand[100],;
         
         vector<Instruction> Insts;
         
         ifstream obj(objFile.c_str());
         
-        insCount  =0;
+        insCount  = 0;
         
         if(obj.is_open())
         {
@@ -110,11 +144,13 @@ vector<Instruction> SourceCode::getInstructions(string objFile)
                                  case 'T':
                                    // Calculate the length of object code in this record in decimal.
                                    //(col 8-9)
-                                        recordSize = 16*(hex_To_int(line.at(7))) + hex_To_int(line.at(8));
+                                       // recordSize = 16*(hex_To_int(line.at(7))) + hex_To_int(line.at(8));
+                                          
+                                           recordSize = line.lenght() - 9;
                                                 
                                                 i=9;
                                         
-                                        while(i + 1 <= 68)
+                                        while(recordSize > 0)
                                         {        
                                                  d = hex_To_int(line.at(i+1));
                                                  
@@ -151,31 +187,60 @@ vector<Instruction> SourceCode::getInstructions(string objFile)
                                                         case 1:
                                                                 break;
                                                         case 2:
-                                                                 addR1 = getAddress(line.at(i+2));
-                                                                 addR2 = getAddress(line.at(i+3));
+                                                                 R1 = getReg(line.at(i+2));
+                                                                 R2 = getReg(line.at(i+3));                
                                                                  
-                                                                 R1= this->tables.getSymbol(addR1);
-                                                                 R2= this->tables.getSymbol(addR2);
-                                                                 
-                                                                 for(j=0;  j<4; j++)
-                                                                 	{
-                                                                 		Operand[j]=addR1.at(j);
-                                                                 	}
-                                                                 	Operand[j] = ',';
-                                                                 	
-                                                                for(j=0;  j<4; j++)
-                                                                 	{
-                                                                 		Operand[j]=addR2.at(j);
-                                                                 	} 	
-                                                                 	Operand[j] = '\n';
-                                                                 	
-                                                                 	ins.SetOperand(std::string(Operand));
+                                                if(R1.lenght()=2)
+                                                     {
+                                                     	operand[0] = R1.at(0);
+                                                     	operand[1] = R1.at(1);
+                                                    	operand[2] = ',';
+                                                    	 
+                                                    	 if(R2.lenght()=2)
+                                                    		{
+                                                    			operand[3] = R2.at(0);
+                                                    		 	operand[4] = R2.at(1);
+                                                    			operand[5] = '\n';
+                                                    			ins.SetOperand(std::string(Operand));
+                                                    		}
+                                                    		else
+                                                    		{
+                                                    			operand[3] = R2.at(0);
+                                                    			operand[4] = '\n';
+                                                    			ins.SetOperand(std::string(Operand));
+                                                    		}
+                                                     }
+                                                     else
+                                                     {
+                                                     	operand[0]= R1.at(0);
+                                                     	operand[1] = ',';
+                                                     	
+                                                     	if(R2.lenght()=2)
+                                                    		{
+                                                    			operand[2] = R2.at(0);
+                                                    		 	operand[3] = R2.at(1);
+                                                    			operand[4] = '\n';
+                                                    			ins.SetOperand(std::string(Operand));
+                                                    		}
+                                                    		else
+                                                    		{
+                                                    			operand[2] = R2.at(0);
+                                                    			operand[3] = '\n';
+                                                    			ins.SetOperand(std::string(Operand));
+                                                    		}
+                                                     	
+                                                     }
+                                                      recordSize -= 4;
+                                                      i += 4s; 
+                                                      
+                                                      break;          	
                                                         case 3:
                                                                 break;
                                                         case 4:
                                                                 break;
                                                 }      
-                                                Insts[insCOunt++] = ins;
+                                                Insts[insCount++] = ins;
+                                                
                                                               
                                         }
                                         break;

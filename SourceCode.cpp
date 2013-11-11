@@ -118,10 +118,10 @@ string getReG(char c)
 
 vector<Instruction> SourceCode::getInstructions(string objFile)
 {
-        int i, j, d, format, insCount, recordSize; 
+        int k, i, j, d, format, insCount, recordSize; 
         std::string line, R1, R2;
         vector<int> binary_opcode;
-        char newByte[2], Operand[100],;
+        char newByte[2], Operand[100], name[12], disp[4];
         
         vector<Instruction> Insts;
         
@@ -148,11 +148,11 @@ vector<Instruction> SourceCode::getInstructions(string objFile)
                                           
                                            recordSize = line.lenght() - 9;
                                                 
-                                                i=9;
+                                                k=9;
                                         
                                         while(recordSize > 0)
                                         {        
-                                                 d = hex_To_int(line.at(i+1));
+                                                 d = hex_To_int(line.at(k+1));
                                                  
                                                 //find the binary representation of the second half byte of the opcode
                                                 binary_opcode = getBinary(d);
@@ -160,7 +160,9 @@ vector<Instruction> SourceCode::getInstructions(string objFile)
                                                 // fint the real opcode, by geting rid of the last 2 bits
                                                 
                                                 newByte[1] = int_To_hex((8*binary_opcode[0]) + 4*binary_opcode[1]);
-                                                newByte[0] = line.at(i);
+                                                newByte[0] = line.at(k);
+                                            	n = binary_opcode[2];
+                                                i = binary_opcode[3];
                                                 
                                                 // look i up in the map                 
                                                 Instruction  ins(string(newByte), this->tables);
@@ -169,17 +171,26 @@ vector<Instruction> SourceCode::getInstructions(string objFile)
                                         
                                                 if(format == 3)
                                                 {
-                                                        binary_opcode = getBinary(line.at(i+2));
+                                                	binary_opcode = getBinary(line.at(k+2));
+                                                       x = binary_opcode[0];
+                                                       b = binary_opcode[1];
+                                                       p = binary_opcode[2];
+                                                       e = binary_opcode[3];
+                                                       
                                                         
-                                                        if(binary_opcode[3] == 1)
+                                                        if(e == 1)  // extended format 
                                                                 {
                                                                         ins.SetFormat(4);
                                                                         format = ins.GetFormat();
-                                                                }
                                                                         
-                                                        else
-                                                                ins.SetFormat(3);
-                                                                
+                                                                        name[0] = '+';
+                                                                        
+                                                                        int l = 0; 
+                                                                        while( l < (ins.GetName()).lenght())
+                                                                        {
+                                                                        	name[l+1] = *((ins.GetName()) + l);
+                                                                        }
+                                                                }
                                                         
                                                 }        
                                                 switch(format)
@@ -187,8 +198,8 @@ vector<Instruction> SourceCode::getInstructions(string objFile)
                                                         case 1:
                                                                 break;
                                                         case 2:
-                                                                 R1 = getReg(line.at(i+2));
-                                                                 R2 = getReg(line.at(i+3));                
+                                                                 R1 = getReg(line.at(k+2));
+                                                                 R2 = getReg(line.at(k+3));                
                                                                  
                                                 if(R1.lenght()=2)
                                                      {
@@ -233,8 +244,67 @@ vector<Instruction> SourceCode::getInstructions(string objFile)
                                                       recordSize -= 4;
                                                       i += 4s; 
                                                       
-                                                      break;          	
+                                                      break;    
+                                                            	
                                                         case 3:
+                                                        	
+                                                        	if(i == 1 && n == 0) // immediate (operand = TA)
+                                                        	{
+                                                        	
+                                                        		operand[0] = '#';
+                                                        		
+                                                        		if((b == 0 && p == 0) || (b == 1 && p == 1)) // Direct
+                                                        		{
+                                                        			// TA=disp (format 3) or address (format 4)                                                        		
+                                                        		}
+                                                        		else if(b == 0 && p == 1) // PC-relative
+                                                        		{
+                                                        			// TA=(PC)+disp
+                                                        			
+                                                        		}
+                                                        		else if(b == 1 && p == 0) // Base Relative
+                                                        		{
+                                                        		   //	TA=(B)+disp
+                                                        		}
+                                                        		ins.SetOperand(std::string(Operand));
+                                                        	}
+                                                        	else if(i == 0 && n == 1) // Indirect (operand = [[TA]])
+                                                        	{
+                                                        		operand[0] = '@';
+                                                        		
+                                                        		if(b == 0 && p == 1) // PC-relative
+                                                        		{
+                                                        			// TA=(PC)+disp
+                                                        			
+                                                        		}
+                                                        		else if(b == 1 && p == 0) // Base Relative
+                                                        		{
+                                                        		   //	TA=(B)+disp
+                                                        		}
+                                                        		ins.SetOperand(std::string(Operand));
+                                                        	}
+                                                        	else if((i == 0 && n == 0) || (i == 1 && n == 1)) // Simple
+                                                        	{
+                                                        	
+                                                        		if(x == 0)
+                                                        		{
+                                                        			// indexed
+                                                        		}
+                                                        		if((b == 0 && p == 0) || (b == 1 && p == 1)) // Direct
+                                                        		{
+                                                        			// TA=disp (format 3) or address (format 4)                                                        		
+                                                        		}
+                                                        		else if(b == 0 && p == 1) // PC-relative
+                                                        		{
+                                                        			// TA=(PC)+disp
+                                                        			
+                                                        		}
+                                                        		else if(b == 1 && p == 0) // Base Relative
+                                                        		{
+                                                        		   //	TA=(B)+disp
+                                                        		}
+                                                        		ins.SetOperand(std::string(Operand));
+                                                        	}
                                                                 break;
                                                         case 4:
                                                                 break;

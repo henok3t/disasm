@@ -1,3 +1,6 @@
+#ifndef SYMTABLE_HPP
+#define SYMTABLE_HPP
+
 #include <iostream>
 #include <map>
 #include <vector>
@@ -28,3 +31,5 @@ private:
 	map<string, string> symTab; 
 	map<string, struct opVals> opTab;
 };
+
+#endif

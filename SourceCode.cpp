@@ -1,14 +1,144 @@
 #include "SourceCode.hpp"
+#include "Instruction.hpp"
 #include <iostream>
 #include <map>
 #include <vector>
 #include <stdint.h>
 #include <stdio.h>
 #include <fstream>
+#include "LineCode.hpp"
 
 using namespace std;
 
-int hex_To_int(char c)
+SourceCode::SourceCode(SymTable ST, string sourcefile, string output):
+	source(sourcefile.c_str()),
+	outfile(output.c_str())
+{
+        this->tables = ST;
+}
+
+void SourceCode::createInstructions()
+{
+	string line;   
+	     
+	if(source.is_open())
+	{
+			 while ( getline (source,line) )
+			 {
+					 switch(line.at(0))
+					 {
+							 case 'H':
+									handleHeaderRecord(line);
+									break;
+							 case 'D':
+									handleDefineRecord(line);
+									break;
+							 case 'R':
+									handleReferRecord(line);
+									break;                                        
+							 case 'T':
+									handleTextRecord(line);
+									break;
+							 case 'M':
+									handleModificationRecord(line);
+									break;
+							 case 'E':
+									handleEndRecord(line);
+									break;
+					 }
+			 }
+	}
+}
+
+void SourceCode::handleHeaderRecord(string& line)
+{
+	cout<<"Got Header Record"<<endl;
+	char lab[7];
+	char operand[7] = {'0'};
+	
+	// get label
+	for(int i=0; i < 6; i++)
+	{
+		if( line[i+1] == ' ')
+		{
+			lab[i] = '\0';
+			break;
+		}
+		lab[i] = line[i+1];
+	}
+	lab[6] = '\0';
+	
+	// get start address
+	bool startReading = false; int j = 0;
+	for(int i = 0; i < 6; i++ )
+	{
+		if(line[i+7] != '0')
+			startReading = true;		
+		if(startReading)
+		{
+			operand[j] = line[i+7];
+			j++;
+		}
+	}
+	if( j == 0 ) // address is zero
+	{
+		operand[j] = '1';
+		j++;
+	}
+	operand[j] = '\0';
+	code.push_back(LineCode(string(lab), "START", string(operand)));		
+	cout<<"Processed Header Record"<<endl;
+}
+
+void SourceCode::handleDefineRecord(string& line)
+{
+	cout<<"Got Define Record"<<endl;
+	cout<<"Processed Define Record"<<endl;
+}
+
+void SourceCode::handleReferRecord(string& line)
+{
+	cout<<"Got Refer Record"<<endl;
+	cout<<"Processed Refer Record"<<endl;
+}
+		
+void SourceCode::handleTextRecord(string& line)
+{
+	cout<<"Got Text Record"<<endl;	
+	cout<<"Processed Text Record"<<endl;	
+}
+
+void SourceCode::handleModificationRecord(string& line)
+{
+	cout<<"Got Modification Record"<<endl;
+	cout<<"Processed Modification Record"<<endl;
+}
+
+void SourceCode::handleEndRecord(string& line)
+{
+	cout<<"Got End Record"<<endl;
+	cout<<"Processed End Record"<<endl;
+}               
+                
+void SourceCode::writeInstructions()
+{
+    cout<<"Writing to file"<<endl;
+    
+    for(int i = 0; i < code.size(); i++)
+    {
+		string label = code[i].getLabel();
+		outfile<<label;
+		for(int j = 0; j < (10 - label.size()); j++)
+			outfile<<" ";
+		string insts = code[i].getInstruction();
+		outfile<<insts;
+		for(int j = 0; j < (10 - insts.size()); j++)
+			outfile<<" ";
+		outfile<<code[i].getOperand()<<endl;
+	}                   
+}
+
+int SourceCode::hex_To_int(char c)
 {
         if(c <= 57 && c >= 48)             // 0-9
                         return int(c - 48);
@@ -21,7 +151,7 @@ int hex_To_int(char c)
 
 }
 
-char int_To_hex(int i)
+char SourceCode::int_To_hex(int i)
 {
         if(i <= 9 && i >= 0)
                 return char(i);
@@ -51,7 +181,7 @@ char int_To_hex(int i)
         }
 }
 
-vector<int> getBinary(int d)
+vector<int> SourceCode::getBinary(int d)
 {
                  int j= 3;
                 vector<int> binary_opcode;                                 
@@ -72,17 +202,7 @@ vector<int> getBinary(int d)
                  return binary_opcode;
 }
 
-string getAddress(char c)
-{        
-        
-}
-
-SourceCode::SourceCode(SymTable ST)
-{
-        this->tables = ST;
-}
-
-string getReG(char c)
+string SourceCode::getReg(char c)
 {
 	switch(c)
 		{
@@ -114,229 +234,4 @@ string getReG(char c)
 				return "SW";
 				break;
 		}
-}
-
-vector<Instruction> SourceCode::getInstructions(string objFile)
-{
-        int k, i, j, d, format, insCount, recordSize; 
-        std::string line, R1, R2;
-        vector<int> binary_opcode;
-        char newByte[2], Operand[100], name[12], disp[4];
-        
-        vector<Instruction> Insts;
-        
-        ifstream obj(objFile.c_str());
-        
-        insCount  = 0;
-        
-        if(obj.is_open())
-        {
-                 while ( getline (obj,line) )
-                 {
-                         switch(line.at(0))
-                         {
-                                 case 'H':
-                                        break;
-                                 case 'D':
-                                        break;
-                                 case 'R':
-                                        break;                                        
-                                 case 'T':
-                                   // Calculate the length of object code in this record in decimal.
-                                   //(col 8-9)
-                                       // recordSize = 16*(hex_To_int(line.at(7))) + hex_To_int(line.at(8));
-                                          
-                                           recordSize = line.lenght() - 9;
-                                                
-                                                k=9;
-                                        
-                                        while(recordSize > 0)
-                                        {        
-                                                 d = hex_To_int(line.at(k+1));
-                                                 
-                                                //find the binary representation of the second half byte of the opcode
-                                                binary_opcode = getBinary(d);
-                                                
-                                                // fint the real opcode, by geting rid of the last 2 bits
-                                                
-                                                newByte[1] = int_To_hex((8*binary_opcode[0]) + 4*binary_opcode[1]);
-                                                newByte[0] = line.at(k);
-                                            	n = binary_opcode[2];
-                                                i = binary_opcode[3];
-                                                
-                                                // look i up in the map                 
-                                                Instruction  ins(string(newByte), this->tables);
-                                                ins.GetName();
-                                                format = ins.GetFormat(); 
-                                        
-                                                if(format == 3)
-                                                {
-                                                	binary_opcode = getBinary(line.at(k+2));
-                                                       x = binary_opcode[0];
-                                                       b = binary_opcode[1];
-                                                       p = binary_opcode[2];
-                                                       e = binary_opcode[3];
-                                                       
-                                                        
-                                                        if(e == 1)  // extended format 
-                                                                {
-                                                                        ins.SetFormat(4);
-                                                                        format = ins.GetFormat();
-                                                                        
-                                                                        name[0] = '+';
-                                                                        
-                                                                        int l = 0; 
-                                                                        while( l < (ins.GetName()).lenght())
-                                                                        {
-                                                                        	name[l+1] = *((ins.GetName()) + l);
-                                                                        }
-                                                                }
-                                                        
-                                                }        
-                                                switch(format)
-                                                {
-                                                        case 1:
-                                                                break;
-                                                        case 2:
-                                                                 R1 = getReg(line.at(k+2));
-                                                                 R2 = getReg(line.at(k+3));                
-                                                                 
-                                                if(R1.lenght()=2)
-                                                     {
-                                                     	operand[0] = R1.at(0);
-                                                     	operand[1] = R1.at(1);
-                                                    	operand[2] = ',';
-                                                    	 
-                                                    	 if(R2.lenght()=2)
-                                                    		{
-                                                    			operand[3] = R2.at(0);
-                                                    		 	operand[4] = R2.at(1);
-                                                    			operand[5] = '\n';
-                                                    			ins.SetOperand(std::string(Operand));
-                                                    		}
-                                                    		else
-                                                    		{
-                                                    			operand[3] = R2.at(0);
-                                                    			operand[4] = '\n';
-                                                    			ins.SetOperand(std::string(Operand));
-                                                    		}
-                                                     }
-                                                     else
-                                                     {
-                                                     	operand[0]= R1.at(0);
-                                                     	operand[1] = ',';
-                                                     	
-                                                     	if(R2.lenght()=2)
-                                                    		{
-                                                    			operand[2] = R2.at(0);
-                                                    		 	operand[3] = R2.at(1);
-                                                    			operand[4] = '\n';
-                                                    			ins.SetOperand(std::string(Operand));
-                                                    		}
-                                                    		else
-                                                    		{
-                                                    			operand[2] = R2.at(0);
-                                                    			operand[3] = '\n';
-                                                    			ins.SetOperand(std::string(Operand));
-                                                    		}
-                                                     	
-                                                     }
-                                                      recordSize -= 4;
-                                                      i += 4s; 
-                                                      
-                                                      break;    
-                                                            	
-                                                        case 3:
-                                                        	
-                                                        	if(i == 1 && n == 0) // immediate (operand = TA)
-                                                        	{
-                                                        	
-                                                        		operand[0] = '#';
-                                                        		
-                                                        		if((b == 0 && p == 0) || (b == 1 && p == 1)) // Direct
-                                                        		{
-                                                        			// TA=disp (format 3) or address (format 4)                                                        		
-                                                        		}
-                                                        		else if(b == 0 && p == 1) // PC-relative
-                                                        		{
-                                                        			// TA=(PC)+disp
-                                                        			
-                                                        		}
-                                                        		else if(b == 1 && p == 0) // Base Relative
-                                                        		{
-                                                        		   //	TA=(B)+disp
-                                                        		}
-                                                        		ins.SetOperand(std::string(Operand));
-                                                        	}
-                                                        	else if(i == 0 && n == 1) // Indirect (operand = [[TA]])
-                                                        	{
-                                                        		operand[0] = '@';
-                                                        		
-                                                        		if(b == 0 && p == 1) // PC-relative
-                                                        		{
-                                                        			// TA=(PC)+disp
-                                                        			
-                                                        		}
-                                                        		else if(b == 1 && p == 0) // Base Relative
-                                                        		{
-                                                        		   //	TA=(B)+disp
-                                                        		}
-                                                        		ins.SetOperand(std::string(Operand));
-                                                        	}
-                                                        	else if((i == 0 && n == 0) || (i == 1 && n == 1)) // Simple
-                                                        	{
-                                                        	
-                                                        		if(x == 0)
-                                                        		{
-                                                        			// indexed
-                                                        		}
-                                                        		if((b == 0 && p == 0) || (b == 1 && p == 1)) // Direct
-                                                        		{
-                                                        			// TA=disp (format 3) or address (format 4)                                                        		
-                                                        		}
-                                                        		else if(b == 0 && p == 1) // PC-relative
-                                                        		{
-                                                        			// TA=(PC)+disp
-                                                        			
-                                                        		}
-                                                        		else if(b == 1 && p == 0) // Base Relative
-                                                        		{
-                                                        		   //	TA=(B)+disp
-                                                        		}
-                                                        		ins.SetOperand(std::string(Operand));
-                                                        	}
-                                                                break;
-                                                        case 4:
-                                                                break;
-                                                }      
-                                                Insts[insCount++] = ins;
-                                                
-                                                              
-                                        }
-                                        break;
-                                 case 'M':
-                                        break;
-                                 case 'E':
-                                        break;
-                         }
-                 }
-        }
-        obj.close();
-}
-
-bool SourceCode::generateSourceCode(vector<Instruction>& vec)
-{
-        
-}
-                
-                
-bool SourceCode::loadToFile(string sourceFile)
-{
-                        
-}
-                
-                
-void SourceCode::printSourceCode()
-{
-                        
 }

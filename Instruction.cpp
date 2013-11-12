@@ -35,11 +35,7 @@ int Instruction::GetLength()
 {
 	return format;	
 }
-	
-void Instruction::print()
-{
-	cout<<endl<<name<<" " <<format<<" "<<operand;
-}      
+	    
 void Instruction::SetOperand(string op)
 {
 	this->operand = op;

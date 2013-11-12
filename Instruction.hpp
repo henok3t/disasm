@@ -22,12 +22,6 @@ class Instruction
 	void SetFormat(int);
 	void SetOperand(string op);
 	int GetLength();
-	bool IsIndirect();
-	bool IsImmediate();
-	bool IsRelative();
-	bool IsIndexed();
-	bool IsExtended();
-	void print();
 	
 private:
 	SymTable Stable;
@@ -35,11 +29,6 @@ private:
 	string name;
 	int format;
 	string operand;
-	bool indirect;
-	bool immediate;
-	bool relative;
-	bool indexed;
-	bool extended;	
 };
 
 #endif // INSTRUCTION_HPP

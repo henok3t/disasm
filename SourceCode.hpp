@@ -31,7 +31,7 @@ public:
 private:
 		int hex_To_int(char c);
 		char int_To_hex(int i);
-		vector<int> getBinary(int d);
+		void getBinary(int d, vector<int>& binary_opcode);
 		string getAddress(char c);
 		string getReg(char c);
 

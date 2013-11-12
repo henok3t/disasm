@@ -19,11 +19,8 @@ public:
 		SourceCode(SymTable ST, string sourcefile, string output);
 		~SourceCode(){source.close(); outfile.close();}
 		
-		void createInstructions();
-		bool loadToFile(ofstream,vector<Instruction>);
-		void writeInstructions();
-		bool generateSourceCode(vector<Instruction>& vec);
-		bool loadToFile(string sourceFile);
+		void createInstructions();		
+		void writeInstructions();		
 		void handleHeaderRecord(string& line);
 		void handleDefineRecord(string& line);
 		void handleReferRecord(string& line);		
@@ -41,12 +38,7 @@ private:
 		SymTable tables;
 		ifstream source;
 		ofstream outfile;
-		vector<LineCode> code;
-		vector<string> instructionsFull;
-		
-		string progName;
-		string progSize;
-	
+		vector<LineCode> code;	
 };
 
 #endif

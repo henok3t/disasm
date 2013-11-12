@@ -7,7 +7,7 @@ LineCode::LineCode(string l, string insts, string opr)
 {
 	label = l;
 	instruction = insts;
-	opr = operand;
+	operand = opr;
 }
 
 string LineCode::getLabel()

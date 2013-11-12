@@ -19,8 +19,7 @@ SourceCode::SourceCode(SymTable ST, string sourcefile, string output):
 
 void SourceCode::createInstructions()
 {
-	string line;   
-	     
+	string line;   	     
 	if(source.is_open())
 	{
 			 while ( getline (source,line) )
@@ -54,7 +53,8 @@ void SourceCode::handleHeaderRecord(string& line)
 {
 	cout<<"Got Header Record"<<endl;
 	char lab[7];
-	char operand[7] = {'0'};
+	char operand[8] = {'0'};
+	operand[0] = ' '; // nixbpe doesn't apply here
 	
 	// get label
 	for(int i=0; i < 6; i++)
@@ -69,8 +69,8 @@ void SourceCode::handleHeaderRecord(string& line)
 	lab[6] = '\0';
 	
 	// get start address
-	bool startReading = false; int j = 0;
-	for(int i = 0; i < 6; i++ )
+	bool startReading = false; int j = 1;	
+	for(int i = 1; i < 7; i++ )
 	{
 		if(line[i+7] != '0')
 			startReading = true;		
@@ -80,9 +80,9 @@ void SourceCode::handleHeaderRecord(string& line)
 			j++;
 		}
 	}
-	if( j == 0 ) // address is zero
+	if( j == 1 ) // address is zero
 	{
-		operand[j] = '1';
+		operand[j] = '0';
 		j++;
 	}
 	operand[j] = '\0';
@@ -117,6 +117,16 @@ void SourceCode::handleModificationRecord(string& line)
 void SourceCode::handleEndRecord(string& line)
 {
 	cout<<"Got End Record"<<endl;
+	char address[5];
+	
+	for(int i=0; i < 5; i++)
+	{
+		address[i] = line[i+3];
+	}
+	address[5] = '\0';
+	string operand = tables.getSymbol(string(address));
+	
+	code.push_back(LineCode("", "END", " " + string(operand)));
 	cout<<"Processed End Record"<<endl;
 }               
                 
@@ -132,9 +142,10 @@ void SourceCode::writeInstructions()
 			outfile<<" ";
 		string insts = code[i].getInstruction();
 		outfile<<insts;
-		for(int j = 0; j < (10 - insts.size()); j++)
+		for(int j = 0; j < (11 - insts.size()); j++)
 			outfile<<" ";
-		outfile<<code[i].getOperand()<<endl;
+		string op = code[i].getOperand();
+		outfile<<op<<endl;
 	}                   
 }
 

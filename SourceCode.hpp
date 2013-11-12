@@ -34,6 +34,7 @@ private:
 		void getBinary(int d, vector<int>& binary_opcode);
 		string getAddress(char c);
 		string getReg(char c);
+		void addHex(char* a, string b, char* sum);
 
 		SymTable tables;
 		ifstream source;

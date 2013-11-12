@@ -88,11 +88,13 @@ void SourceCode::handleTextRecord(string& line)
 {
 	cout<<"Got Text Record"<<endl;
 	vector<string> literals;
-	int position,  decimal, format, insCount, recordSize; 
+	int position,  decimal, format, insCount, recordSize, opos; 
 	int n = 0, i = 0, x = 0, b = 0, p = 0, e = 0; // nixbpe
 	std::string R1, R2; // register for format to instructions
 	vector<int> binary_opcode;
-	char newByte[3], operand[100], name[12], disp[4];
+	char newByte[3], operand[100], name[12], disp[5];
+	char locationCounter[5] = "0000";
+	disp[4] = '\0';
 
 	// Calculate the length of object code in this record in decimal.
 	//(col 8-9)
@@ -116,6 +118,10 @@ void SourceCode::handleTextRecord(string& line)
 		Instruction  ins(string(newByte), this->tables);
 		format = ins.GetFormat(); 
 		cout<<ins.GetName()<<endl;
+		LineCode codeline;
+		
+		string posSymbol = tables.getSymbol(string(locationCounter));
+		codeline.setLabel(posSymbol);
 		
 		if(format == 3)
 		{
@@ -134,28 +140,38 @@ void SourceCode::handleTextRecord(string& line)
 				name[0] = '+';				
 
 				string instName = ins.GetName();
-				for(int l = 0; l < instName.size(); l++)
+				int l;
+				for(l = 0; l < instName.size(); l++)
 				{
 					name[l+1] = instName[l];
 				}
+				cout<<l<<endl;
+				name[l+1] = '\0';
 			}				
 		}
 		
 		if( e != 1)
 		{			
 			string instName = ins.GetName();
-			for(int l = 0; l < instName.size(); l++)
+			int l;
+			for(l = 0; l < instName.size(); l++)
 			{
 				name[l] = instName[l];
 			}
+			cout<<l<<endl;
+			name[l] = '\0';
 		}
+		
+		codeline.setInstruction(name);
 		
 		switch(format)
 		{
 			case 1:
 				operand[0] = '\0';
+				addHex(locationCounter, "0001", locationCounter);
 				break;
 			case 2:
+				addHex(locationCounter, "0002", locationCounter);
 				R1 = getReg(line.at(position+2));
 				R2 = getReg(line.at(position+3));                
 				operand[0] = R1.at(0);
@@ -170,72 +186,71 @@ void SourceCode::handleTextRecord(string& line)
 				{					
 					operand[3] = (R1.size() == 2) ? R2[0] : '\0';
 					operand[4] = '\0';
-				}
-				
-				recordSize -= 4;
+				}				
 				break;   						
-			case 3:					
+			case 3:		
+				addHex(locationCounter, "0003", locationCounter);	
+				cout<<locationCounter<<endl;
+				opos = 0;		
 				if(i == 1 && n == 0) // immediate (operand = TA)
 				{					
-					operand[0] = '#';
-					
-					if((b == 0 && p == 0) || (b == 1 && p == 1)) // Direct
-					{
-						// TA=disp (format 3) or address (format 4)                                                        		
-					}
-					else if(b == 0 && p == 1) // PC-relative
-					{
-						// TA=(PC)+disp						
-					}
-					else if(b == 1 && p == 0) // Base Relative
-					{
-					   //	TA=(B)+disp
-					}
-					ins.SetOperand(std::string(operand));
+					operand[opos] = '#';
+					opos++;
 				}
 				else if(i == 0 && n == 1) // Indirect (operand = [[TA]])
 				{
-					operand[0] = '@';
-					
-					if(b == 0 && p == 1) // PC-relative
-					{
-						// TA=(PC)+disp
-						
-					}
-					else if(b == 1 && p == 0) // Base Relative
-					{
-					   //	TA=(B)+disp
-					}
-					ins.SetOperand(std::string(operand));
+					operand[opos] = '@';
+					opos++;
 				}
-				else if((i == 0 && n == 0) || (i == 1 && n == 1)) // Simple
-				{
 				
-					if(x == 0)
-					{
-						// indexed
-					}
-					if((b == 0 && p == 0) || (b == 1 && p == 1)) // Direct
-					{
-						// TA=disp (format 3) or address (format 4)                                                        		
-					}
-					else if(b == 0 && p == 1) // PC-relative
-					{
-						// TA=(PC)+disp
-						
-					}
-					else if(b == 1 && p == 0) // Base Relative
-					{
-					   //	TA=(B)+disp
-					}
-					ins.SetOperand(std::string(operand));
+				if(b == 0 && p == 1) // PC-relative
+				{
+					for(int l = 0; l < 3; l++)
+						disp[l+1] = line[position + 3 + l];
+					disp[0] = (disp[1] == 'F') ? 'F' : '0';					
+					addHex(locationCounter, string(disp), disp);							
+					string symbol = tables.getSymbol(string(disp));
+					int l;
+					for(l = 0; l < symbol.size(); l++)					
+						operand[l + opos] = symbol[l];
+					operand[l + opos] = '\0';
 				}
+				else if(b == 1 && p == 0) // Base Relative
+				{
+				   //	TA=(B)+disp
+				}
+				else
+				{
+					if(i == 1)
+					{
+						bool startReading = false; int j = opos;	
+						for(int l = 0; l < 3; l++ )
+						{
+							if(line[position + 3 + l] != '0')
+								startReading = true;		
+							if(startReading)
+							{
+								operand[j] = line[position + 3 + l];
+								j++;
+							}
+						}
+						if( j == opos ) // address is zero
+						{
+							operand[j] = '0';
+							j++;
+						}
+						operand[j] = '\0';					
+					}
+				}
+				codeline.setOperand(string(operand));			
 				break;
 			case 4:
+				addHex(locationCounter, "0004", locationCounter);
 				break;
 		}     		
 		recordSize-=format*2;		
 		position+=format*2;		
+		code.push_back(codeline);
 	}
 	cout<<"Processed Text Record"<<endl;	
 }
@@ -377,4 +392,14 @@ string SourceCode::getReg(char c)
 				return "SW";
 				break;
 		}
+}
+
+void SourceCode::addHex(char* a, string b, char* sum)
+{
+	int carry = 0;
+	for(int i = 3; i >=0; i--)
+	{
+		sum[i] = int_To_hex( (hex_To_int(a[i]) + hex_To_int(b[i]) + carry)%16);
+		carry = (hex_To_int(a[i]) + hex_To_int(b[i]) + carry)/16;
+	}
 }

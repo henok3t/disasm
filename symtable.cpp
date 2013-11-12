@@ -128,7 +128,10 @@ void SymTable::printOptab()
 
 string SymTable::getSymbol(string address)
 {
-	return this->symTab[address];
+	if(symTab.count(address) == 1)
+		return this->symTab[address];
+	else
+		return "";
 }
 
 struct opVals SymTable::getOpVal(string opcode)

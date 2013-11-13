@@ -20,7 +20,9 @@ SourceCode::SourceCode(SymTable ST, string sourcefile, string output):
 
 void SourceCode::createInstructions()
 {
-	string line;   	     
+	string line;   	 
+	char locationCounter[5] = "0000";    
+	char location[5];
 	if(source.is_open())
 	{
 		 while ( getline (source,line) )
@@ -31,9 +33,24 @@ void SourceCode::createInstructions()
 						handleHeaderRecord(line);
 						break;                                      
 				 case 'T':
-						handleTextRecord(line);
+						//strcpy(location, &line[3]);
+						//location[4] = '\0';
+						//while(string(location) > string(locationCounter))
+						//{
+							//map<string, string> symTab = tables.getSymTab();
+							//map<string, string>::iterator iter;
+							//for(iter = symTab.begin(); iter != symTab.end(); ++iter)
+							//{
+								//if(iter->first == string(locationCounter))
+								//{
+									//// I will do this later, doesn't affect test code
+								//}
+							//}
+						//}
+						handleTextRecord(line, (char*)locationCounter);
 						break;
 				 case 'M':
+						// Here is where the resw and resb will go. Will do this later tonight.
 						handleModificationRecord(line);
 						break;
 				 case 'E':
@@ -50,6 +67,7 @@ void SourceCode::handleHeaderRecord(string& line)
 	char lab[7];
 	char operand[8] = {'0'};
 	operand[0] = ' '; // nixbpe doesn't apply here
+	char length[5] = "0000";
 	
 	// get label
 	for(int i=0; i < 6; i++)
@@ -81,11 +99,18 @@ void SourceCode::handleHeaderRecord(string& line)
 		j++;
 	}
 	operand[j] = '\0';
+	
+	// get Length
+	for(int i = 0; i < 4; i++)
+		length[i] = line[i+15];
+	programSize = string(length);
+	cout<<"Program Size: "<<programSize<<endl;
+	
 	code.push_back(LineCode(string(lab), "START", string(operand)));		
 	cout<<"Processed Header Record"<<endl;
 }
 		
-void SourceCode::handleTextRecord(string& line)
+void SourceCode::handleTextRecord(string& line, char* locationCounter)
 {
 	cout<<"Got Text Record"<<endl;
 	map<string, string> literals;
@@ -94,7 +119,6 @@ void SourceCode::handleTextRecord(string& line)
 	std::string R1, R2; // register for format to instructions
 	vector<int> binary_opcode;
 	char newByte[3], operand[100], name[12], disp[5];
-	char locationCounter[5] = "0000";
 	char BaseReg[5] = "0000";
 	bool basemode = false;
 	disp[4] = '\0';

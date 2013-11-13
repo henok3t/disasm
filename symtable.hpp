@@ -26,6 +26,7 @@ public:
 	void printOptab();
 	string getSymbol(string address);
 	struct opVals getOpVal(string opcode);
+	map<string, string> getSymTab(){ return symTab; }
 		
 private:
 	map<string, string> symTab; 

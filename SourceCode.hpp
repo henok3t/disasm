@@ -24,7 +24,7 @@ public:
 		void handleHeaderRecord(string& line);
 		void handleDefineRecord(string& line);
 		void handleReferRecord(string& line);		
-		void handleTextRecord(string& line);
+		void handleTextRecord(string& line, char* locationCounter);
 		void handleModificationRecord(string& line);
 		void handleEndRecord(string& line);
 	
@@ -35,6 +35,7 @@ private:
 		string getAddress(char c);
 		string getReg(char c);
 		void addHex(char* a, string b, char* sum);
+		string programSize;
 
 		SymTable tables;
 		ifstream source;

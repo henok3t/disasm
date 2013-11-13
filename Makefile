@@ -19,4 +19,4 @@ LineCode.o: LineCode.cpp
 	$(CC) -c LineCode.cpp
 	
 clean:
-	rm main.o symtable.o SourceCode.o Instruction.o LineCode.o
+	rm main.o symtable.o SourceCode.o Instruction.o LineCode.o dasm

@@ -1,3 +1,13 @@
+/* Information about Assignment
+	Name: Henok Tadesse
+	UserAccount: masc0753
+	Partner Name: Joseph Mouawad
+	Partner UserAccount: masc0736
+	class: cs530
+	Assignment: Program Assignment 2
+ */
+ 
+
 #include "SourceCode.hpp"
 #include "Instruction.hpp"
 #include <iostream>
@@ -109,7 +119,6 @@ void SourceCode::createInstructions()
 								}
 							}
 						}
-						handleModificationRecord(line);
 						break;
 				 case 'E':
 						handleEndRecord(line);
@@ -265,6 +274,7 @@ void SourceCode::handleTextRecord(string& line, char* locationCounter)
 			case 1:
 				operand[0] = '\0';
 				addHex(locationCounter, "0001", locationCounter);
+				codeline.setOperand(string(operand));	
 				break;
 			case 2:
 				addHex(locationCounter, "0002", locationCounter);
@@ -282,7 +292,8 @@ void SourceCode::handleTextRecord(string& line, char* locationCounter)
 				{					
 					operand[3] = (R1.size() == 2) ? R2[0] : '\0';
 					operand[4] = '\0';
-				}				
+				}
+				codeline.setOperand(string(operand));				
 				break;   						
 			case 3:		
 				addHex(locationCounter, "0003", locationCounter);	
@@ -455,12 +466,6 @@ void SourceCode::handleTextRecord(string& line, char* locationCounter)
 		code.push_back(codeline);
 	}
 	cout<<"Processed Text Record"<<endl;	
-}
-
-void SourceCode::handleModificationRecord(string& line)
-{
-	cout<<"Got Modification Record"<<endl;
-	cout<<"Processed Modification Record"<<endl;
 }
 
 void SourceCode::handleEndRecord(string& line)

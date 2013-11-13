@@ -1,3 +1,12 @@
+/* Information about Assignment
+	Name: Henok Tadesse
+	UserAccount: masc0753
+	Partner Name: Joseph Mouawad
+	Partner UserAccount: masc0736
+	class: cs530
+	Assignment: Program Assignment 2
+ */
+
 #include "symtable.hpp"
 #include <iostream>
 #include <map>

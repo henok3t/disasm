@@ -9,7 +9,7 @@
 
 using namespace std;
 
-
+		// constructor 
 Instruction::Instruction(string key, SymTable Stable)
 {
 	this->opKey = key;
@@ -20,12 +20,12 @@ Instruction::Instruction(string key, SymTable Stable)
 	this->format = vals.format;
 	this->name = vals.name;
 }
-
+                   // returns the Mneumonic of the instruciton
 string Instruction::GetName()
 {
 	return name;
 }
-	
+		// returns the format of the instruction (format 1,2, 3, or 4)
 int Instruction::GetFormat()
 {
 	return format;		 		
@@ -35,12 +35,12 @@ int Instruction::GetLength()
 {
 	return format;	
 }
-	    
+	// set the operand, what comes after the mneumonic in the source code
 void Instruction::SetOperand(string op)
 {
 	this->operand = op;
 }
-
+			// set the format of the instruction (format 1,2, 3, or 4)
 void Instruction::SetFormat(int fmt)
 {
 	this->format = fmt;

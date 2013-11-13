@@ -8,7 +8,7 @@ using namespace std;
 class LineCode
 {
 public:
-	LineCode(){};
+	LineCode(){isExtended = false;}
 	LineCode(string l, string insts, string opr);
 	~LineCode(){};
 	
@@ -20,6 +20,7 @@ public:
 	void setInstruction(string insts);
 	void setOperand(string opr);
 	
+	bool isExtended;
 private:
 	string label;
 	string instruction;

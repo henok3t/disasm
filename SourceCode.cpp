@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <fstream>
 #include "LineCode.hpp"
+#include <string.h>
 
 using namespace std;
 
@@ -87,22 +88,47 @@ void SourceCode::handleHeaderRecord(string& line)
 void SourceCode::handleTextRecord(string& line)
 {
 	cout<<"Got Text Record"<<endl;
-	vector<string> literals;
+	map<string, string> literals;
 	int position,  decimal, format, insCount, recordSize, opos; 
 	int n = 0, i = 0, x = 0, b = 0, p = 0, e = 0; // nixbpe
 	std::string R1, R2; // register for format to instructions
 	vector<int> binary_opcode;
 	char newByte[3], operand[100], name[12], disp[5];
 	char locationCounter[5] = "0000";
+	char BaseReg[5] = "0000";
+	bool basemode = false;
 	disp[4] = '\0';
 
 	// Calculate the length of object code in this record in decimal.
 	//(col 8-9)
-	// recordSize = 16*(hex_To_int(line.at(7))) + hex_To_int(line.at(8));                                          
-	recordSize = 12;                                                
+	recordSize = (16*(hex_To_int(line.at(7))) + hex_To_int(line.at(8)))*2;                                              
 	position=9; // starting point of the instructions in the text record                                       
 	while(recordSize > 0)
 	{   
+		// check if locationcounter is in literal table
+		if(literals.count(string(locationCounter)) == 1)
+		{
+			code.push_back(LineCode("", "LTORG", ""));
+			map<string, string>::iterator iter;
+			for(iter = literals.begin(); iter != literals.end(); ++iter)
+			{
+				for(int l = 3; l < (iter->second.size() - 1); l++)
+				{
+					addHex(locationCounter, "0001", locationCounter);
+					recordSize -= 1;
+					position += 1;
+					if(iter->second[1] == 'X') // count by 2 if hexadeximal
+					{
+						l++;
+						recordSize -= 1;
+						position += 1;
+					}
+				}
+			}
+			literals.clear();
+			continue;
+		}
+		
 		//find the binary representation of the second half byte of the opcode
 		decimal = hex_To_int(line.at(position+1));	 
 		getBinary(decimal, binary_opcode);
@@ -135,32 +161,20 @@ void SourceCode::handleTextRecord(string& line)
 			if(e == 1)  // extended format 
 			{
 				ins.SetFormat(4);
-				format = ins.GetFormat();
-				
-				name[0] = '+';				
-
-				string instName = ins.GetName();
-				int l;
-				for(l = 0; l < instName.size(); l++)
-				{
-					name[l+1] = instName[l];
-				}
-				cout<<l<<endl;
-				name[l+1] = '\0';
+				format = ins.GetFormat();				
+				codeline.isExtended = true;	
+							
 			}				
-		}
+		}	
 		
-		if( e != 1)
-		{			
-			string instName = ins.GetName();
-			int l;
-			for(l = 0; l < instName.size(); l++)
-			{
-				name[l] = instName[l];
-			}
-			cout<<l<<endl;
-			name[l] = '\0';
+		string instName = ins.GetName();
+		int l;
+		for(l = 0; l < instName.size(); l++)
+		{
+			name[l] = instName[l];
 		}
+		cout<<l<<endl;
+		name[l] = '\0';
 		
 		codeline.setInstruction(name);
 		
@@ -203,25 +217,64 @@ void SourceCode::handleTextRecord(string& line)
 					opos++;
 				}
 				
-				if(b == 0 && p == 1) // PC-relative
-				{
-					for(int l = 0; l < 3; l++)
+				// get the displacement
+				for(int l = 0; l < 3; l++)
 						disp[l+1] = line[position + 3 + l];
-					disp[0] = (disp[1] == 'F') ? 'F' : '0';					
+				disp[0] = (disp[1] == 'F') ? 'F' : '0';		
+				
+				if(b == 0 && p == 1) // PC-relative
+				{								
 					addHex(locationCounter, string(disp), disp);							
 					string symbol = tables.getSymbol(string(disp));
+					if(symbol[0] == '=')
+						literals[string(disp)] = symbol;
+					else
+					{
+						operand[opos] = ' ';
+						opos++;
+					}
+
 					int l;
 					for(l = 0; l < symbol.size(); l++)					
 						operand[l + opos] = symbol[l];
+					if( x == 1 )
+					{
+						operand[l + opos] = ',';
+						operand[l + opos + 1] = 'X';
+						l+=2;
+					}
 					operand[l + opos] = '\0';
 				}
 				else if(b == 1 && p == 0) // Base Relative
 				{
-				   //	TA=(B)+disp
+					if(basemode == false)
+					{
+					   basemode = true;
+					   code.push_back(LineCode("", "BASE", " " + tables.getSymbol(BaseReg)));					   
+					}
+					addHex(BaseReg, string(disp), disp);
+					string symbol = tables.getSymbol(string(disp));
+					if(symbol[0] == '=')
+						literals[string(disp)] = symbol;
+					else
+					{
+						operand[opos] = ' ';
+						opos++;
+					}
+					int l;
+					for(l = 0; l < symbol.size(); l++)					
+						operand[l + opos] = symbol[l];
+					if( x == 1 )
+					{
+						operand[l + opos] = ',';
+						operand[l + opos + 1] = 'X';
+						l+=2;
+					}
+					operand[l + opos] = '\0';
 				}
 				else
 				{
-					if(i == 1)
+					if(i == 1 && n == 0)
 					{
 						bool startReading = false; int j = opos;	
 						for(int l = 0; l < 3; l++ )
@@ -241,15 +294,82 @@ void SourceCode::handleTextRecord(string& line)
 						}
 						operand[j] = '\0';					
 					}
-				}
+					else
+					{
+						string symbol = tables.getSymbol(string(disp));
+						if(symbol[0] == '=')
+							literals[string(disp)] = symbol;							
+						else
+						{
+							operand[opos] = ' ';
+							opos++;
+						}
+						int l;
+						for(l = 0; l < symbol.size(); l++)					
+							operand[l + opos] = symbol[l];
+						if( x == 1 )
+						{
+							operand[l + opos] = ',';
+							operand[l + opos + 1] = 'X';
+							l+=2;
+						}
+						operand[l + opos] = '\0';
+						if(codeline.getInstruction() == "RSUB") // RSUB is a wierd instruction
+							operand[0] = '\0'; // No operand for RSUB
+					}
+				}				
+					
 				codeline.setOperand(string(operand));			
 				break;
 			case 4:
-				addHex(locationCounter, "0004", locationCounter);
+				cout<<"location:"<<locationCounter<<endl;
+				addHex(locationCounter, "0004", locationCounter);				
+				cout<<"location:"<<locationCounter<<endl;
+				opos = 0;		
+				if(i == 1 && n == 0) // immediate (operand = TA)
+				{					
+					operand[opos] = '#';
+					opos++;
+				}
+				else if(i == 0 && n == 1) // Indirect (operand = [[TA]])
+				{
+					operand[opos] = '@';
+					opos++;
+				}
+				
+				// get the displacement
+				for(int l = 0; l < 4; l++)
+						disp[l] = line[position + 4 + l];	
+				cout<<"disp: "<<disp<<endl;
+				string symbol = tables.getSymbol(string(disp));
+				if(symbol[0] == '=')
+					literals[string(disp)] = symbol;
+				else
+				{
+					operand[opos] = ' ';
+					opos++;
+				}
+				int l;
+				for(l = 0; l < symbol.size(); l++)					
+					operand[l + opos] = symbol[l];
+				if( x == 1 )
+				{
+					operand[l + opos] = ',';
+					operand[l + opos + 1] = 'X';
+					l+=2;
+				}
+				operand[l + opos] = '\0';			
+				codeline.setOperand(string(operand));
 				break;
 		}     		
-		recordSize-=format*2;		
+		recordSize-=format*2;
+		cout<<"record: "<<recordSize<<endl;		
 		position+=format*2;		
+		if(codeline.getInstruction() == "LDB")	
+		{			
+			strcpy(BaseReg, disp);
+			cout<<"BaseReg: "<<BaseReg<<endl;
+		}
 		code.push_back(codeline);
 	}
 	cout<<"Processed Text Record"<<endl;	
@@ -285,7 +405,11 @@ void SourceCode::writeInstructions()
     {
 		string label = code[i].getLabel();
 		outfile<<label;
-		for(int j = 0; j < (10 - label.size()); j++)
+		for(int j = 0; j < (9 - label.size()); j++)
+			outfile<<" ";
+		if( code[i].isExtended )
+			outfile<<"+";
+		else
 			outfile<<" ";
 		string insts = code[i].getInstruction();
 		outfile<<insts;
@@ -302,10 +426,10 @@ int SourceCode::hex_To_int(char c)
         if(c <= 57 && c >= 48)             // 0-9
                         return int(c - 48);
                         
-        else if(c <= 65 && c >= 70)        // A-F
+        else if(c <= 70 && c >= 65)        // A-F
                         return int(c - 65 + 10);
                                 
-        else if(c <= 97 && c >= 102)       //a-f   
+        else if(c <= 102 && c >= 97)       //a-f   
                         return int(c - 97 + 10);
 
 }
@@ -399,7 +523,8 @@ void SourceCode::addHex(char* a, string b, char* sum)
 	int carry = 0;
 	for(int i = 3; i >=0; i--)
 	{
-		sum[i] = int_To_hex( (hex_To_int(a[i]) + hex_To_int(b[i]) + carry)%16);
-		carry = (hex_To_int(a[i]) + hex_To_int(b[i]) + carry)/16;
+		int tmpcarry = (hex_To_int(a[i]) + hex_To_int(b[i]) + carry)/16;
+		sum[i] = int_To_hex( (hex_To_int(a[i]) + hex_To_int(b[i]) + carry)%16);	
+		carry = tmpcarry;
 	}
 }

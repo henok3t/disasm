@@ -8,6 +8,7 @@ LineCode::LineCode(string l, string insts, string opr)
 	label = l;
 	instruction = insts;
 	operand = opr;
+	isExtended = false;
 }
 
 string LineCode::getLabel()

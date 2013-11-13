@@ -8,6 +8,7 @@
 #include <fstream>
 #include "LineCode.hpp"
 #include <string.h>
+#include <sstream>
 
 using namespace std;
 
@@ -23,6 +24,9 @@ void SourceCode::createInstructions()
 	string line;   	 
 	char locationCounter[5] = "0000";    
 	char location[5];
+	int current, next, last;
+	map<string, string> symTab = tables.getSymTab();
+	map<string, string>::iterator iter, nextIter;
 	if(source.is_open())
 	{
 		 while ( getline (source,line) )
@@ -33,24 +37,78 @@ void SourceCode::createInstructions()
 						handleHeaderRecord(line);
 						break;                                      
 				 case 'T':
-						//strcpy(location, &line[3]);
-						//location[4] = '\0';
-						//while(string(location) > string(locationCounter))
-						//{
-							//map<string, string> symTab = tables.getSymTab();
-							//map<string, string>::iterator iter;
-							//for(iter = symTab.begin(); iter != symTab.end(); ++iter)
-							//{
-								//if(iter->first == string(locationCounter))
-								//{
-									//// I will do this later, doesn't affect test code
-								//}
-							//}
-						//}
+						memcpy(location, &line[3], 4);
+						location[4] = '\0';						
+						while(string(locationCounter) < location)
+						{
+							// cout<<string(locationCounter)<<endl;							
+							for(iter = symTab.begin(); iter != symTab.end(); ++iter)
+							{								
+								if(iter->first == string(locationCounter))
+								{									
+									nextIter = ++iter; iter--;
+									current = hex_to_int((iter)->first);
+									if( (nextIter) != symTab.end() )
+										next = hex_to_int((nextIter)->first);
+									last = hex_to_int(location);
+									int op = 0;
+									if( next < last && (nextIter) != symTab.end())
+										op = next - current;
+									else
+										op = last - current;
+									ostringstream convert;
+									if( op % 3 == 0 )
+									{
+										convert<<op/3;
+										code.push_back(LineCode(iter->second, "RESW", " " + convert.str()));
+									}
+									else
+									{
+										convert<<op;									
+										code.push_back(LineCode(iter->second, "RESB", " " + convert.str()));
+									}
+									for(int l = 0; l < op; l++) // Add op to location counter
+										addHex(locationCounter, "0001", locationCounter);
+								}
+							}
+						}
 						handleTextRecord(line, (char*)locationCounter);
 						break;
 				 case 'M':
-						// Here is where the resw and resb will go. Will do this later tonight.
+						// Here is where the resw and resb will go. Will do this later tonight.						
+						while(string(locationCounter) < programSize)
+						{
+							for(iter = symTab.begin(); iter != symTab.end(); ++iter)
+							{								
+								if(iter->first == string(locationCounter))
+								{									
+									nextIter = ++iter; iter--;
+									current = hex_to_int((iter)->first);
+									if( (nextIter) != symTab.end() )
+										next = hex_to_int((nextIter)->first);
+									last = hex_to_int(programSize);
+									cout<<last<<endl;
+									int op = 0;
+									if( next < last && (nextIter) != symTab.end())
+										op = next - current;
+									else
+										op = last - current;
+									ostringstream convert;
+									if( op % 3 == 0 )
+									{
+										convert<<op/3;
+										code.push_back(LineCode(iter->second, "RESW", " " + convert.str()));
+									}
+									else
+									{
+										convert<<op;									
+										code.push_back(LineCode(iter->second, "RESB", " " + convert.str()));
+									}
+									for(int l = 0; l < op; l++) // Add op to location counter
+										addHex(locationCounter, "0001", locationCounter);
+								}
+							}
+						}
 						handleModificationRecord(line);
 						break;
 				 case 'E':
@@ -368,7 +426,7 @@ void SourceCode::handleTextRecord(string& line, char* locationCounter)
 				string symbol = tables.getSymbol(string(disp));
 				if(symbol[0] == '=')
 					literals[string(disp)] = symbol;
-				else
+				else if( (i == 0 && n == 0) || (i == 1 && n == 1) )
 				{
 					operand[opos] = ' ';
 					opos++;
@@ -511,35 +569,35 @@ void SourceCode::getBinary(int d, vector<int>& binary_opcode)
 string SourceCode::getReg(char c)
 {
 	switch(c)
-		{
-			case '0':
-				return "A";
-				break;
-			case '1':
-				return "X";
-				break;
-			case '2':
-				return "L";
-				break;
-			case '3':
-				return "B";
-				break;
-			case '4':
-				return "S";
-				break;
-			case '5':
-				return "T";
-				break;
-			case '6':
-				return "F";
-				break;
-			case '8':
-				return "PC";
-				break;
-			case '9':
-				return "SW";
-				break;
-		}
+	{
+		case '0':
+			return "A";
+			break;
+		case '1':
+			return "X";
+			break;
+		case '2':
+			return "L";
+			break;
+		case '3':
+			return "B";
+			break;
+		case '4':
+			return "S";
+			break;
+		case '5':
+			return "T";
+			break;
+		case '6':
+			return "F";
+			break;
+		case '8':
+			return "PC";
+			break;
+		case '9':
+			return "SW";
+			break;
+	}
 }
 
 void SourceCode::addHex(char* a, string b, char* sum)
@@ -551,4 +609,10 @@ void SourceCode::addHex(char* a, string b, char* sum)
 		sum[i] = int_To_hex( (hex_To_int(a[i]) + hex_To_int(b[i]) + carry)%16);	
 		carry = tmpcarry;
 	}
+}
+
+
+int SourceCode::hex_to_int(string hex)
+{
+	return 4096*(hex_To_int(hex[0])) + 256*(hex_To_int(hex[1])) + 16*(hex_To_int(hex[2])) + (hex_To_int(hex[3]));
 }

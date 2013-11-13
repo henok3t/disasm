@@ -20,7 +20,7 @@ public:
 		~SourceCode(){source.close(); outfile.close();}
 		
 		void createInstructions();		
-		void writeInstructions();		
+		void writeInstructions();				
 		void handleHeaderRecord(string& line);
 		void handleDefineRecord(string& line);
 		void handleReferRecord(string& line);		
@@ -30,6 +30,7 @@ public:
 	
 private:
 		int hex_To_int(char c);
+		int  hex_to_int(string hex);
 		char int_To_hex(int i);
 		void getBinary(int d, vector<int>& binary_opcode);
 		string getAddress(char c);

@@ -9,7 +9,7 @@
  */
  
  
-#include "symtable.hpp"
+#include "Table.hpp"
 #include "SourceCode.hpp"
 #include <fstream>
 #include <stdlib.h>
@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 	}
 	
 	// parse symbol table
-	SymTable table;
+	Table table;
 	vector<string> vec = table.getStringVec(symfile);        
 	if(!table.createSymTab(vec))
 	{

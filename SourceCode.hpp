@@ -13,7 +13,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
-#include "symtable.hpp"
+#include "Table.hpp"
 #include "Instruction.hpp"
 #include "LineCode.hpp"
 #include <fstream>
@@ -25,7 +25,7 @@ class SourceCode
 {
 public:
 		SourceCode(){};
-		SourceCode(SymTable ST, string sourcefile, string output);
+		SourceCode(Table ST, string sourcefile, string output);
 		~SourceCode(){source.close(); outfile.close();}
 		
 		// creates the lines of instructions
@@ -62,9 +62,11 @@ private:
 		// adds hexadecimal numbers
 		void addHex(char* a, string b, char* sum);
 		
+		void checkLocationDifference(char* start, const char* end);
+		
 		
 		string programSize;
-		SymTable tables;
+		Table tables;
 		ifstream source;
 		ofstream outfile;
 		vector<LineCode> code;	

@@ -22,7 +22,7 @@
 
 using namespace std;
 
-SourceCode::SourceCode(SymTable ST, string sourcefile, string output):
+SourceCode::SourceCode(Table ST, string sourcefile, string output):
 	source(sourcefile.c_str()),
 	outfile(output.c_str())
 {
@@ -34,9 +34,6 @@ void SourceCode::createInstructions()
 	string line;   	 
 	char locationCounter[5] = "0000";    
 	char location[5];
-	int current, next, last;
-	map<string, string> symTab = tables.getSymTab();
-	map<string, string>::iterator iter, nextIter;
 	if(source.is_open())
 	{
 		 while ( getline (source,line) )
@@ -48,79 +45,15 @@ void SourceCode::createInstructions()
 						break;                                      
 				 case 'T':
 						memcpy(location, &line[3], 4);
-						location[4] = '\0';						
-						while(string(locationCounter) < location)
-						{
-							// cout<<string(locationCounter)<<endl;							
-							for(iter = symTab.begin(); iter != symTab.end(); ++iter)
-							{								
-								if(iter->first == string(locationCounter))
-								{									
-									nextIter = ++iter; iter--;
-									current = hex_to_int((iter)->first);
-									if( (nextIter) != symTab.end() )
-										next = hex_to_int((nextIter)->first);
-									last = hex_to_int(location);
-									int op = 0;
-									if( next < last && (nextIter) != symTab.end())
-										op = next - current;
-									else
-										op = last - current;
-									ostringstream convert;
-									if( op % 3 == 0 )
-									{
-										convert<<op/3;
-										code.push_back(LineCode(iter->second, "RESW", " " + convert.str()));
-									}
-									else
-									{
-										convert<<op;									
-										code.push_back(LineCode(iter->second, "RESB", " " + convert.str()));
-									}
-									for(int l = 0; l < op; l++) // Add op to location counter
-										addHex(locationCounter, "0001", locationCounter);
-								}
-							}
-						}
+						location[4] = '\0';
+						checkLocationDifference(locationCounter, location);						
 						handleTextRecord(line, (char*)locationCounter);
 						break;
-				 case 'M':
-						// Here is where the resw and resb will go. Will do this later tonight.						
-						while(string(locationCounter) < programSize)
-						{
-							for(iter = symTab.begin(); iter != symTab.end(); ++iter)
-							{								
-								if(iter->first == string(locationCounter))
-								{									
-									nextIter = ++iter; iter--;
-									current = hex_to_int((iter)->first);
-									if( (nextIter) != symTab.end() )
-										next = hex_to_int((nextIter)->first);
-									last = hex_to_int(programSize);
-									cout<<last<<endl;
-									int op = 0;
-									if( next < last && (nextIter) != symTab.end())
-										op = next - current;
-									else
-										op = last - current;
-									ostringstream convert;
-									if( op % 3 == 0 )
-									{
-										convert<<op/3;
-										code.push_back(LineCode(iter->second, "RESW", " " + convert.str()));
-									}
-									else
-									{
-										convert<<op;									
-										code.push_back(LineCode(iter->second, "RESB", " " + convert.str()));
-									}
-									for(int l = 0; l < op; l++) // Add op to location counter
-										addHex(locationCounter, "0001", locationCounter);
-								}
-							}
-						}
+				 case 'M':								
+						// nothing to do for modification record
 						break;
 				 case 'E':
+						checkLocationDifference(locationCounter, programSize.c_str());	
 						handleEndRecord(line);
 						break;
 			 }
@@ -234,7 +167,6 @@ void SourceCode::handleTextRecord(string& line, char* locationCounter)
 		// look it up in the map                 
 		Instruction  ins(string(newByte), this->tables);
 		format = ins.GetFormat(); 
-		cout<<ins.GetName()<<endl;
 		LineCode codeline;
 		
 		string posSymbol = tables.getSymbol(string(locationCounter));
@@ -264,7 +196,6 @@ void SourceCode::handleTextRecord(string& line, char* locationCounter)
 		{
 			name[l] = instName[l];
 		}
-		cout<<l<<endl;
 		name[l] = '\0';
 		
 		codeline.setInstruction(name);
@@ -293,11 +224,10 @@ void SourceCode::handleTextRecord(string& line, char* locationCounter)
 					operand[3] = (R1.size() == 2) ? R2[0] : '\0';
 					operand[4] = '\0';
 				}
-				codeline.setOperand(string(operand));				
+				codeline.setOperand(" " + string(operand));				
 				break;   						
 			case 3:		
 				addHex(locationCounter, "0003", locationCounter);	
-				cout<<locationCounter<<endl;
 				opos = 0;		
 				if(i == 1 && n == 0) // immediate (operand = TA)
 				{					
@@ -415,9 +345,7 @@ void SourceCode::handleTextRecord(string& line, char* locationCounter)
 				codeline.setOperand(string(operand));			
 				break;
 			case 4:
-				cout<<"location:"<<locationCounter<<endl;
 				addHex(locationCounter, "0004", locationCounter);				
-				cout<<"location:"<<locationCounter<<endl;
 				opos = 0;		
 				if(i == 1 && n == 0) // immediate (operand = TA)
 				{					
@@ -433,7 +361,6 @@ void SourceCode::handleTextRecord(string& line, char* locationCounter)
 				// get the displacement
 				for(int l = 0; l < 4; l++)
 						disp[l] = line[position + 4 + l];	
-				cout<<"disp: "<<disp<<endl;
 				string symbol = tables.getSymbol(string(disp));
 				if(symbol[0] == '=')
 					literals[string(disp)] = symbol;
@@ -456,12 +383,10 @@ void SourceCode::handleTextRecord(string& line, char* locationCounter)
 				break;
 		}     		
 		recordSize-=format*2;
-		cout<<"record: "<<recordSize<<endl;		
 		position+=format*2;		
 		if(codeline.getInstruction() == "LDB")	
 		{			
 			strcpy(BaseReg, disp);
-			cout<<"BaseReg: "<<BaseReg<<endl;
 		}
 		code.push_back(codeline);
 	}
@@ -620,4 +545,44 @@ void SourceCode::addHex(char* a, string b, char* sum)
 int SourceCode::hex_to_int(string hex)
 {
 	return 4096*(hex_To_int(hex[0])) + 256*(hex_To_int(hex[1])) + 16*(hex_To_int(hex[2])) + (hex_To_int(hex[3]));
+}
+
+void SourceCode::checkLocationDifference(char* start, const char* end)
+{
+	int current, next, last;
+	map<string, string> symTab = tables.getSymTab();
+	map<string, string>::iterator iter, nextIter;
+	
+	while(string(start) < end)
+	{						
+		for(iter = symTab.begin(); iter != symTab.end(); ++iter)
+		{								
+			if(iter->first == string(start))
+			{									
+				nextIter = ++iter; iter--;
+				current = hex_to_int((iter)->first);
+				if( (nextIter) != symTab.end() )
+					next = hex_to_int((nextIter)->first);
+				last = hex_to_int(string(end));
+				int op = 0;
+				if( next < last && (nextIter) != symTab.end())
+					op = next - current;
+				else
+					op = last - current;
+				ostringstream convert;
+				if( op % 3 == 0 )
+				{
+					convert<<op/3;
+					code.push_back(LineCode(iter->second, "RESW", " " + convert.str()));
+				}
+				else
+				{
+					convert<<op;									
+					code.push_back(LineCode(iter->second, "RESB", " " + convert.str()));
+				}
+				for(int l = 0; l < op; l++) // Add op to location counter
+					addHex(start, "0001", start);
+			}
+		}
+	}
 }

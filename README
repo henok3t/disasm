@@ -13,8 +13,8 @@ Files in Project
 	3. SourceCode.hpp - headerfile
 	4. LineCode.cpp - Abstracts a line of sic code
 	5. LineCode.hpp - header file
-	6. symtable.cpp - includes the opTab, SymTab and LitTab
-	7. symtable.hpp - header file	
+	6. Table.cpp - includes the opTab, SymTab and LitTab
+	7. Table.hpp - header file	
 	8. Instruction.cpp - abstacts an instruction
 	9. Instruction.hpp - header file
 	10. OpCodes - a table that includes all opcodes for sic XE	

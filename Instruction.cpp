@@ -7,7 +7,7 @@
 	Assignment: Program Assignment 2
  */
 
-#include "symtable.hpp"
+#include "Table.hpp"
 #include <iostream>
 #include <map>
 #include <vector>
@@ -19,7 +19,7 @@
 using namespace std;
 
 		// constructor 
-Instruction::Instruction(string key, SymTable Stable)
+Instruction::Instruction(string key, Table Stable)
 {
 	this->opKey = key;
 	this->Stable = Stable;

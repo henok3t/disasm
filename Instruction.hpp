@@ -13,6 +13,7 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include "Table.hpp"
 
 
 using namespace std;
@@ -22,7 +23,7 @@ class Instruction
 {
 	public:
 	Instruction(){};      // default Constructor
-	Instruction(string opKey, SymTable Stable);// constructor with an opcode key and a
+	Instruction(string opKey, Table Stable);// constructor with an opcode key and a
 						// symTable instance containig the
 						// corresponding Optable and Symtable
 	~Instruction(){};  // default destructor
@@ -35,7 +36,7 @@ class Instruction
 	int GetLength();
 	
 private:
-	SymTable Stable; 
+	Table Stable; 
 	string opKey; // opOCde
 	string name; // Mneunmonic
 	int format;  //  format 

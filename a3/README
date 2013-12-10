@@ -1,0 +1,27 @@
+Information about Assignment
+	Name: Henok Tadesse
+	UserAccount: masc0753
+	Partner Name: Joseph Mouawad
+	Partner UserAccount: masc0736
+	class: cs530
+	Assignment: Program Assignment 3
+	filename: README
+	
+Files in Project
+	1. parse.py - source code
+	2. test - test file to test the source code with
+	3. README
+
+Compile Instruction
+	there is none - beauty of python despite the inefficiency
+
+Operating instructions:
+	python parse.py <filename>
+
+Extra Feature for extra credit:
+	1. The code works with any spacing - i.e. even if there is not space between id and operator it works
+	2. Colors - Green for good syntax and Red for bad syntax
+	3. Fairly accurate error handling
+	
+Known Deficiencies of bugs:
+	None known
